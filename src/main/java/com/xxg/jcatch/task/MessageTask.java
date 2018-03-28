@@ -7,6 +7,8 @@ import com.xxg.jcatch.mbg.bean.TExceptionExample;
 import com.xxg.jcatch.mbg.mapper.TAppMapper;
 import com.xxg.jcatch.mbg.mapper.TExceptionMapper;
 import com.xxg.jcatch.message.MessageService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.util.StringUtils;
@@ -19,6 +21,8 @@ import java.util.List;
  * Created by wucao on 2017/11/16.
  */
 public class MessageTask {
+
+    private static final Logger logger = LoggerFactory.getLogger(MessageTask.class);
 
     @Autowired
     private TAppMapper mbgAppMapper;
@@ -50,6 +54,7 @@ public class MessageTask {
         for(TApp app : appList) {
             if(StringUtils.hasText(app.getSubscriber())) {
 
+                logger.info("有订阅发邮件{}", app.getId());
                 TExceptionExample exceptionExample = new TExceptionExample();
                 exceptionExample.or().andAppIdEqualTo(app.getId()).andLastSubmitTimeBetween(start, end);
                 List<TException> exceptionList = mbgExceptionMapper.selectByExample(exceptionExample);

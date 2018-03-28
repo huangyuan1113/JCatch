@@ -31,12 +31,12 @@ public class ApiController {
 
     @ResponseBody
     @RequestMapping(value = "/submitExceptionJson", method = RequestMethod.POST)
-    public ApiResult submitExceptionJson(@RequestBody String jsonString, HttpServletRequest request, String appId) throws IOException, ClassNotFoundException {
+    public ApiResult submitExceptionJson(@RequestBody String jsonString, HttpServletRequest request, String appId) {
 
-        if(!StringUtils.hasText(appId)) {
+        if (!StringUtils.hasText(appId)) {
             return ApiResult.fail("AppId is required");
         }
-        if(appMapper.selectByPrimaryKey(appId) == null) {
+        if (appMapper.selectByPrimaryKey(appId) == null) {
             return ApiResult.fail("Unknown appId: " + appId);
         }
 
@@ -44,28 +44,20 @@ public class ApiController {
 
         TException tException = new TException();
         tException.setAppId(appId);
-        tException.setRemoteAddr(request.getRemoteAddr());
-        if(jsonObject.has("stackTrace")) {
-            tException.setStackTrace(jsonObject.getString("stackTrace"));
+
+        String ip = request.getHeader("X-Real-IP");
+        if (ip == null) {
+            tException.setRemoteAddr(request.getRemoteAddr());
+        } else {
+            tException.setRemoteAddr(ip);
         }
-        if(jsonObject.has("exceptionName")) {
-            tException.setExceptionName(jsonObject.getString("exceptionName"));
-        }
-        if(jsonObject.has("message")) {
-            tException.setMessage(jsonObject.getString("message"));
-        }
-        if(jsonObject.has("className")) {
-            tException.setClassName(jsonObject.getString("className"));
-        }
-        if(jsonObject.has("fileName")) {
-            tException.setFileName(jsonObject.getString("fileName"));
-        }
-        if(jsonObject.has("methodName")) {
-            tException.setMethodName(jsonObject.getString("methodName"));
-        }
-        if(jsonObject.has("lineNumber")) {
-            tException.setLineNumber(jsonObject.getInt("lineNumber"));
-        }
+        tException.setStackTrace(jsonObject.optString("stackTrace", null));
+        tException.setExceptionName(jsonObject.optString("exceptionName", null));
+        tException.setMessage(jsonObject.optString("message", null));
+        tException.setClassName(jsonObject.optString("className", null));
+        tException.setFileName(jsonObject.optString("fileName", null));
+        tException.setMethodName(jsonObject.optString("methodName", null));
+        tException.setLineNumber(jsonObject.optInt("lineNumber", 0));
         exceptionSubmitService.submit(tException);
 
         return ApiResult.success();
